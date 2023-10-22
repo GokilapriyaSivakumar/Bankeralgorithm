@@ -1,0 +1,203 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Banker's Algorithm</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+        }
+
+        h1 {
+            text-align: center;
+        }
+
+        form {
+            margin: 0 auto;
+            width: 70%;
+            max-width: 600px;
+            padding: 20px;
+            border: 1px solid #1e1d1d;
+            border-radius: 5px;
+            box-shadow: 0px 0px 10px #b4afaf;
+        }
+
+        label {
+            font-weight: bold;
+        }
+
+        input[type="text"] {
+            width: 90px;
+            padding: 10px;
+            margin: 5px;
+            border: 1px solid #141313;
+            border-radius: 3px;
+            text-align: center;
+            display: inline-block;
+        }
+
+        button {
+            display: block;
+            margin: 0 auto;
+            padding: 10px 20px;
+            background-color: #49a4c3;
+            color: #fcfcfc;
+            border: none;
+            border-radius: 3px;
+            cursor: pointer;
+        }
+
+        #result {
+            margin-top: 20px;
+            text-align: center;
+        }
+    </style>
+</head>
+<body>
+<h1>Banker's Algorithm</h1>
+<form>
+    <label for="processes">Enter total number of processes:</label>
+    <input type="text" id="processes" name="processes"><br><br>
+
+    <label for="resources">Enter total number of resources:</label>
+    <input type="text" id="resources" name="resources"><br><br>
+
+    <h2>Enter available resources:</h2>
+    <div id="availableResources" class="matrix-row"></div>
+
+    <h2>Enter allocation matrix:</h2>
+    <div id="allocationMatrix" class="matrix"></div>
+
+    <h2>Enter maximum requirement matrix:</h2>
+    <div id="maximumMatrix" class="matrix"></div>
+
+    <button type="button" onclick="runBankersAlgorithm()">Run Banker's Algorithm</button>
+</form>
+
+<div id="result">
+    <!-- Display the result of the Banker's Algorithm here -->
+</div>
+
+<script>
+    function createMatrixInput(matrixType) {
+        const processes = parseInt(document.getElementById('processes').value);
+        const resources = parseInt(document.getElementById('resources').value);
+
+        const matrixDiv = document.getElementById(matrixType + 'Matrix');
+        matrixDiv.innerHTML = '';
+
+        for (let i = 0; i < processes; i++) {
+            const rowDiv = document.createElement('div');
+            rowDiv.className = 'matrix-row';
+
+            for (let j = 0; j < resources; j++) {
+                const input = document.createElement('input');
+                input.type = 'text';
+                input.name = `${matrixType}[${i}][${j}]`;
+                input.placeholder = `${matrixType}[${i}][${j}]`;
+                rowDiv.appendChild(input);
+            }
+
+            matrixDiv.appendChild(rowDiv);
+        }
+    }
+
+    function createAvailableResourcesInput() {
+        const resources = parseInt(document.getElementById('resources').value);
+
+        const availableDiv = document.getElementById('availableResources');
+        availableDiv.innerHTML = 'Available Resources: ';
+
+        for (let i = 0; i < resources; i++) {
+            const input = document.createElement('input');
+            input.type = 'text';
+            input.name = `available[${i}]`;
+            input.placeholder = `Resource ${i + 1}`;
+            availableDiv.appendChild(input);
+        }
+    }
+    function runBankersAlgorithm() {
+    const processes = parseInt(document.getElementById('processes').value);
+    const resources = parseInt(document.getElementById('resources').value);
+
+    const allocation = [];
+    const maximum = [];
+    const available = [];
+
+    for (let i = 0; i < processes; i++) {
+        allocation[i] = [];
+        maximum[i] = [];
+        for (let j = 0; j < resources; j++) {
+            allocation[i][j] = parseInt(document.querySelector(`input[name="allocation[${i}][${j}]"]`).value);
+            maximum[i][j] = parseInt(document.querySelector(`input[name="maximum[${i}][${j}]"]`).value);
+        }
+    }
+
+    for (let i = 0; i < resources; i++) {
+        available[i] = parseInt(document.querySelector(`input[name="available[${i}]"]`).value);
+    }
+
+    const work = [...available];
+    const finish = new Array(processes).fill(false);
+    const safeSequence = [];
+    let isSafe = true;
+
+    let found;
+    do {
+        found = false;
+        for (let i = 0; i < processes; i++) {
+            if (!finish[i]) {
+                let canExecute = true;
+                for (let j = 0; j < resources; j++) {
+                    if (maximum[i][j] - allocation[i][j] > work[j]) {
+                        canExecute = false;
+                        break;
+                    }
+                }
+
+                if (canExecute) {
+                    for (let j = 0; j < resources; j++) {
+                        work[j] += allocation[i][j];
+                    }
+                    finish[i] = true;
+                    safeSequence.push(i);
+                    found = true;
+                }
+            }
+        }
+    } while (found);
+
+    for (let i = 0; i < processes; i++) {
+        if (!finish[i]) {
+            isSafe = false;
+            break;
+        }
+    }
+
+    const resultDiv = document.getElementById('result');
+    if (isSafe) {
+        const safeSequenceString = safeSequence.join(" -> ");
+        resultDiv.innerHTML = `Safe sequence: ${safeSequenceString}<br>System is safe.`;
+    } else {
+        resultDiv.innerHTML = "No safe sequence exists.<br>System is not safe.";
+    }
+}
+
+
+
+    document.getElementById('processes').addEventListener('blur', function () {
+        createMatrixInput('allocation');
+        createMatrixInput('maximum');
+        createAvailableResourcesInput();
+    });
+
+    document.getElementById('resources').addEventListener('blur', function () {
+        createMatrixInput('allocation');
+        createMatrixInput('maximum');
+        createAvailableResourcesInput();
+    });
+
+    createAvailableResourcesInput();
+</script>
+</body>
+</html>
